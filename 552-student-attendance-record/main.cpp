@@ -22,55 +22,34 @@
 // A_1 = 1/3 * (2/3)^(n-1) * n * R = 2^(n-1) * n
 // Thus the number of records with A present 0 or 1 time is A_0 + A_1.
 
-// 3.
-// * Of the records that have zero A, we have only two choices for letters.
-// We can have zero, one or two consecutive L.
-// ** The total number of records with zero A and zero L is:
-//    (the fraction of all possible records where P is always chosen out of the
-//    three letters.)
-//    A0L0 = R * (1/3)^n = 1
-// ** The number of records with zero A and one L is:
-//    (Only P is chosen, except one time for L, L can be in any position in the
-//    string)
-//    A0L1 = R * (1/3)^(n-1) * (1/3) * n = n * R * (1/3)^n = n
-// ** The number of records with zero A and two consecutive L is,
-//    the rate at which two L are chosen consecutively, with a P before and
-//    after, at any of the n-3 position which can fit them,
-//    Plus the rate at which two L are chosen consecutively at one of two ends
-//    of the record, with a P before/after and if the record can hold it (n>=3).
-//    If n=2, we just have to draw two L consecutively.
-//    A0L2 = A_0 * [(1/2)^4 * max(n-3,0) + 2 * (1/2)^3 * (if n>=3) + (1/2)^2 *
-//    (if n=2)]
-//    *** if n=2:
-//    A0L2 = 2^n * (1/2)^2 = 1
-//    *** if n>=3:
-//    A0L2 = 2^n * [(1/2)^4 * (n-3) + 2*(1/2)^3]
-//         = (n-3) * 2^(n-4) + 2^(n-2)
-
-//
-// * Of the records that have one A, we can have zero, one or two consecutive L.
-// ** The number of records with one A and zero L is:
-//    A1L0 = A_1 * (1/2)^(n-1) = 2^(n-1)*n * (1/2)^(n-1) = n
-// ** The number of records with one A and one L is:
-//    (L is drawn once, at any of the n-1 available positions,
-//     P is drawn for all other positions).
-//    A1L1 = A_1 * (1/2) * (n-1) * (1/2)^(n-2) = 2^(n-1)*n * (n-1) * (1/2)^(n-1) = n * (n-1)
-// ** The number of records with one A and two consecutive L is:
-//    the number of records with zero A and two consecutive L, which when an A
-//    is added, does not break the two consecutive L.
-//    We can put the A in n-2 positions.
-//    A1L2 = A0L2 * (n-2)
-
-// The answer is then the sum of all of the relevant number of records.
-// Sol = A0L0 + A0L1 + A0L2 + A1L0 + A1L1 + A1L2
-//     = 1 + n + A0L2 + n + n * (n-1) + A0L2 * (n-2)
-//     = 1 + n + n + n^2 - n + A0L2 * (n-1)
-//     = n^2 + n + 1 + A0L2 * (n-1)
-
-// TODO: We forgot the cases where there are many Ls but not consecutive.
 // It might be shorter to do R - cases with more than one A
 // - cases with more than 2 consecutive L
 // + cases with both more than one A and more than 2 consecutive L
+
+// Cases with two or more A: A2*
+// This is R - A0 - A1
+// A2* = 3^n - 2^n - 2^(n-1) * n
+
+// Cases with three or more consecutive L (L3*)
+// L has been chosen three times in a row, and is positioned at any of the (n-2)
+// positions which can fit them.
+// L3* = R * (1/3)^3 * (n-2) = 3^(n-3) * (n-2)
+
+// Cases with both more than one A and more than 2 consecutive L (D)
+// ** L has been chosen three times in a row, at (n-2) possible positions, this
+// is L3*
+// ** We have to fill the remaining (n-3) positions with a least two A.
+// We exclude the cases where A was never chosen, or chosen only once.
+// D = L3* (1 - (2/3)^(n-3) - (1/3) * (n-3) * (2/3)^(n-4))
+//   = 3^(n-3) * (n-2) * (1 - (2/3)^(n-3) - (n-3) * 2^(n-4) * (1/3)^(n-3))
+//   = (n-2) * (3^(n-3) - 2^(n-3) - (n-3) * 2^(n-4))
+
+// Sol = R - A2* - L3* + D
+
+// If n = 1, Sol = 1
+// If n = 2, Sol = 2^n + 2^(n-1)*n = 8
+// If n = 3, Sol = 2^n + 2^(n-1)*n - 3^(n-3) * (n-2) = 19
+// If n >= 4, the above equation works.
 
 // Example: n=3
 // All possible records are:
@@ -78,5 +57,83 @@
 // "LAA", "LAL*", "LAP*", "LLA*", "LLL", "LLP*", "LPA*", "LPL*", "LPP*", -> 7
 // "PAA", "PAL*", "PAP*", "PLA*", "PLL*", "PLP*", "PPA*", "PPL*", "PPP*" -> 8
 
-// Solution is 19
+// Solution is 19 for n=3.
 
+
+// Now we just have to implement the +, -, * and power operators with modulo
+// TODO: is there a problem with the signs?
+//       What happens when we do minus for unsigned types?
+
+#include <iostream>
+
+typedef long long Num; // Long enough for mod_fact * mod_fact
+const Num mod_fact {1000000007};
+
+Num plu(Num x, Num y) { return (x + y) % mod_fact; }
+
+Num minu(Num x, Num y) { return (x - y) % mod_fact; }
+
+Num mul(Num x, Num y) { return (x * y) % mod_fact; }
+
+Num pow(Num x, long y) {
+  if (y < 0) {return 0;}
+  Num res{1};
+  for (long i = 0; i < y; ++i) {
+    res = mul(res, x);
+  }
+  return res;
+}
+
+Num R (Num n) {
+  // Total number of possible records of length n.
+  return pow(3,n);
+}
+
+Num A0 (Num n) {
+  // Number of records with zero A.
+  return pow(2,n);
+}
+
+Num A1 (Num n) {
+  // Number of records with one A exactly.
+  // A1 = 2^(n-1) * n
+  return mul(n, pow(2,n-1));
+}
+
+Num A2star (Num n) {
+  // Number of records with two or more A.
+  // This is R - A0 - A1
+  return minu(minu(R(n), A0(n)), A1(n));
+}
+
+Num L3star (Num n) {
+  // Number of records with three consecutive L in it.
+  // L3* = 3^(n-3) * (n-2)
+  return mul(n-2, pow(3,n-3));
+}
+
+Num D (Num n) {
+  // Number of records which both have two or more A,
+  // and three consecutive L.
+  // D = (n-2) * (3^(n-3) - 2^(n-3) - (n-3) * 2^(n-4))
+  return mul(n-2,
+             minu(minu(pow(3,n-3), pow(2,n-3)),
+                  mul(n-3, pow(2,n-4))));
+}
+
+Num awards (Num n) {
+  // Number of records winning the award.
+  // Sol = R - A2* - L3* + D
+  return plu(minu(minu(R(n), A2star(n)),
+                  L3star(n)),
+             D(n));
+}
+
+int main() {
+  int n{10101};
+  std::cout << "R: " << R(n) << " A2*: " << A2star(n)
+            << " L3*: " << L3star(n) << " D: " << D(n)
+            << " awards: " << awards(n)
+            << std::endl;
+
+}
