@@ -21,28 +21,30 @@
 #include <vector>
 #include <string>
 
-// Index for words inside dictionary, dictionary is less than 1000 in size.
-typedef int WordIndex;
-typedef std::vector<std::string> WordDict;
-typedef std::vector<WordIndex> Sentence;
-typedef std::vector<Sentence> Sentences;
+class Solution {
+private:
+  // Index for words inside dictionary, dictionary is less than 1000 in size.
+  typedef int WordIndex;
+  typedef std::vector<std::string> WordDict;
+  typedef std::vector<WordIndex> Sentence;
+  typedef std::vector<Sentence> Sentences;
 
-std::vector<WordIndex> find_next_words(const WordDict &wordDict,
-                                       const std::string &s) {
-  // Find all the possible next words from the wordDict at the beginning of s.
-  std::vector<WordIndex> possible_words;
-  for (std::size_t i = 0; i < wordDict.size(); ++i) {
-    auto w = wordDict.at(i);
-    if (s.starts_with(w)) {
-      possible_words.push_back(i);
+  std::vector<WordIndex> find_next_words(const WordDict &wordDict,
+                                         const std::string &s) {
+    // Find all the possible next words from the wordDict at the beginning of s.
+    std::vector<WordIndex> possible_words;
+    for (std::size_t i = 0; i < wordDict.size(); ++i) {
+      auto w = wordDict.at(i);
+      if (s.starts_with(w)) {
+        possible_words.push_back(i);
+      }
     }
+    return possible_words;
   }
-  return possible_words;
-}
 
-// Recursively building the sentences.
 Sentences find_sentences(const WordDict &wordDict, const std::string &s,
                          const Sentence &sentence) {
+  // Recursively building the sentences.
   // Stop if there is no more string s.
   Sentences finished_sentences {};
   if (s.empty()) {
@@ -73,7 +75,8 @@ Sentences find_sentences(const WordDict &wordDict, const std::string &s,
   return finished_sentences;
 }
 
-std::string format_sentence (const Sentence &sentence, const WordDict &wordDict) {
+std::string format_sentence(const Sentence &sentence,
+                            const WordDict &wordDict) {
   // Get back a string from a sentence in efficient representation.
   std::string phrase{};
   for (const auto &wi : sentence) {
@@ -84,33 +87,35 @@ std::string format_sentence (const Sentence &sentence, const WordDict &wordDict)
   return phrase;
 }
 
+public:
+  std::vector<std::string> wordBreak (std::string s,
+                                      std::vector<std::string> &wordDict) {
+    std::vector<std::string> phrases {};
+    auto sentences = find_sentences(wordDict, s, Sentence {});
+    for (auto sen : sentences) {
+      auto phrase = format_sentence(sen, wordDict);
+      phrases.push_back(phrase);
+    }
+    return phrases;
+  }
+};
+
 int main () {
   std::cout << "140. Word break II" << std::endl;
 
   std::string ex1_s = "catsanddog";
-  WordDict ex1_wd = {"cat", "cats", "and", "sand", "dog"};
+  std::vector<std::string> ex1_wd = {"cat", "cats", "and", "sand", "dog"};
 
   std::string ex2_s = "pineapplepenapple";
-  WordDict ex2_wd = {"apple","pen","applepen","pine","pineapple"};
+  std::vector<std::string> ex2_wd = {"apple", "pen", "applepen", "pine",
+                                     "pineapple"};
 
   std::string ex3_s = "catsandog";
-  WordDict ex3_wd = {"cats","dog","sand","and","cat"};
+  std::vector<std::string> ex3_wd = {"cats", "dog", "sand", "and", "cat"};
 
-  auto ex1_sentences = find_sentences(ex1_wd, ex1_s, Sentence {});
-  for (auto sen : ex1_sentences) {
-    auto phrase = format_sentence(sen, ex1_wd);
-    std::cout << phrase << std::endl;
-  }
-
-  auto ex2_sentences = find_sentences(ex2_wd, ex2_s, Sentence{});
-  for (auto sen : ex2_sentences) {
-    auto phrase = format_sentence(sen, ex2_wd);
-    std::cout << phrase << std::endl;
-  }
-
-  auto ex3_sentences = find_sentences(ex3_wd, ex3_s, Sentence{});
-  for (auto sen : ex3_sentences) {
-    auto phrase = format_sentence(sen, ex3_wd);
+  Solution solver;
+  auto ex1_phrases = solver.wordBreak(ex2_s, ex2_wd);
+  for (auto phrase : ex1_phrases) {
     std::cout << phrase << std::endl;
   }
 }
