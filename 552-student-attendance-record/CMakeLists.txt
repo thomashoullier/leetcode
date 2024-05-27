@@ -8,3 +8,4 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (SRC_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 add_executable(main "${SRC_DIR}/main.cpp")
+add_executable(examples "${SRC_DIR}/examples.cpp")
